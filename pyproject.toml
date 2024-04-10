@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "schema-validator"
+version = "0.1.0"
+description = ""
+authors = ["Matthias Hamacher <matthias.hamacher1@bp.com>"]
+readme = "README.md"
+packages = [{include = "schema_validator"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+sqlglot = "^23.2.0"
+pyspark = "^3.5.1"
+pandas = "^2.2.1"
+pytest = "^8.1.1"
+pydeequ = "^1.2.0"
+simple-ddl-parser = "^1.0.4"
+sqlalchemy = "^2.0.29"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
