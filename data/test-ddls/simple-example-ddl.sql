@@ -1,0 +1,18 @@
+USE LibraryDB;
+CREATE TABLE Books1 (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Name VARCHAR(50) NOT NULL,
+    Price DOUBLE
+);
+
+CREATE TABLE Books2 (
+    Id1 INT PRIMARY KEY IDENTITY(1,1),
+    Name VARCHAR(50) NOT NULL,
+    Price DOUBLE
+);
+
+CREATE TABLE Books3 (
+    Id1 INT PRIMARY KEY IDENTITY(1,1),
+    Name INT,
+    Price DOUBLE
+);
