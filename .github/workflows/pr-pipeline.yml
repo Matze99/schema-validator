@@ -24,5 +24,7 @@ jobs:
       - name: Run unit tests
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
+          ls
+          cd $GITHUB_WORKSPACE
           poetry install
           python3 -m pytest
