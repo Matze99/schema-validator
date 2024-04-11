@@ -13,8 +13,27 @@ actively working on extending this to directly integrate with data catalogues li
 
 ## Usage
 
-## Make DQ Dimensions 
-https://icedq.com/6-data-quality-dimensions
+```python
+from schema_validator import SchemaStore, PysparkValidatorFactory
+
+schema_store = SchemaStore("path/to/ddl/files")
+
+df = spark_session.read.csv("path/to/csv", header=True, inferSchema=True)
+
+table_schema = schema_store.get_table_schema("schema.table")
+validator = PysparkValidatorFactory.get_validator(table_schema)
+
+is_valid, message = validator.validate(df)
+
+print(f"schema check successful {is_valid} with message {message}")
+```
+
+## Limitations
+
+* alter is not supported yet
+* only sql ddl files are supported
+* only pyspark can be currently validated
+
 
 
 
