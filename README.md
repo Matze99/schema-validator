@@ -11,6 +11,16 @@ and let the validator, load, parse, and compare the schemas for you.
 At the moment, the SchemaValidator only supports reading SQL schemas and only works on Pyspark dataframes. We are
 actively working on extending this to directly integrate with data catalogues like the Glue Catalogue from AWS and more.
 
+## Installation
+
+### From Source
+
+* clone source: `git clone git@github.com:Matze99/schema-validator.git`
+* download poetry
+* install dependencies `poetry install`
+* run build `poetry build`
+* install package in your env`pip install /path/to/schema_validator-0.1.0-py3-none-any.whl`
+
 ## Usage
 
 ```python
