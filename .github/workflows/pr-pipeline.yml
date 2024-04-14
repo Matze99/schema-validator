@@ -23,7 +23,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+          curl -sSL https://install.python-poetry.org | python3.10 -
           poetry install
           poetry run pytest --cov=schema_validator tests/
 
