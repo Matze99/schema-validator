@@ -5,7 +5,7 @@ from pyspark.sql.types import (CharType, VarcharType, BinaryType, BooleanType, D
                                StructType)
 
 
-PYSPARK_TYPE_MAPPING: dict[DataType.Type, SparkDataType] = dict([
+PYSPARK_TYPE_MAPPING: dict[DataType.Type, SparkDataType] = dict([ # type: ignore
         (DataType.Type.CHAR, CharType),
         (DataType.Type.VARCHAR, VarcharType),
         (DataType.Type.BINARY, BinaryType),

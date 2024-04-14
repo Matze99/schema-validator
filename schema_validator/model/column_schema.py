@@ -38,7 +38,7 @@ class ColumnSchema:
     primary_key: bool
     foreign_key: bool
     unique: bool = False
-    type_args: dict[str, int | str] = field(default_factory=dict[str, int | str])
+    type_args: dict[str, int | tuple[int, int]] = field(default_factory=dict[str, int | tuple[int, int]])
 
     def __eq__(self, other):
         if not isinstance(other, ColumnSchema):

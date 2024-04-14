@@ -24,5 +24,10 @@ jobs:
       - name: Run unit tests
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
+          poetry env use python3.10
           poetry install
-          poetry run pytest
+          poetry run pytest --cov=schema_validator tests/
+
+      - name: Run static type analysis
+        run: |
+          poetry run pyright
