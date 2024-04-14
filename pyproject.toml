@@ -22,3 +22,6 @@ pyspark = "^3.5.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+ignore = ["tests/"]

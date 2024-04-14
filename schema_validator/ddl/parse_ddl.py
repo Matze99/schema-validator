@@ -26,8 +26,11 @@ class ParseDdl:
         return sql
 
     @staticmethod
-    def parse_data_type_args(type_: DataType) -> dict[str, int | str]:
+    def parse_data_type_args(type_: DataType | None) -> dict[str, int | tuple[int, int]]:
         args = {}
+        if type_ is None:
+            return args
+
         string_expression = f"create table example(example {type_.__str__()})"
         parsed_expression = DDLParser(string_expression).run()[0]["columns"][0]
         args["size"] = parsed_expression["size"]
@@ -47,6 +50,9 @@ class ParseDdl:
                 elif isinstance(constraint.kind, NotNullColumnConstraint):
                     nullable = False
                     primary_key = False
+
+            if column_expr.kind is None:
+                raise Exception(f"kind is None for {column_expr}")
 
             column_schema = ColumnSchema(
                 column_expr.name, column_expr.kind.this, nullable, primary_key, False
@@ -88,14 +94,14 @@ class ParseDdl:
 
     @staticmethod
     def parse_expr(expr: Expression | None, tables: dict[str, TableSchema]):
-        if ParseDdl.is_create_table_expr(expr):
+        if isinstance(expr, Create):
             new_table = ParseDdl.parse_create_table_expr(expr)
             tables[new_table.table_ref] = new_table
 
         # TODO this does not handle alter
 
     @staticmethod
-    def parse_sql(sql: str) -> dict[[str], TableSchema]:
+    def parse_sql(sql: str) -> dict[str, TableSchema]:
         sql_expressions = sqlglot.parse(sql)
 
         tables = {}
@@ -105,5 +111,5 @@ class ParseDdl:
         return tables
 
     @staticmethod
-    def is_create_table_expr(expr: Expression | None):
+    def is_create_table_expr(expr: Expression | None) -> bool:
         return isinstance(expr, Create)

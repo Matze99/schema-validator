@@ -49,11 +49,11 @@ class PysparkValidatorFactory:
         pyspark_type: SparkDataType = PYSPARK_TYPE_MAPPING[type_]
 
         if size is None:
-            return pyspark_type()
+            return pyspark_type() # type: ignore
         elif isinstance(size, tuple):
-            return pyspark_type(*size)
+            return pyspark_type(*size) # type: ignore
         else:
-            return pyspark_type(size)
+            return pyspark_type(size) # type: ignore
 
     @staticmethod
     def _convert_column_to_pyspark(column: ColumnSchema) -> StructField:
