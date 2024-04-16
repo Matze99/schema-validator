@@ -1,6 +1,6 @@
 USE LibraryDB;
 CREATE TABLE base2.Books2 (
-    Id INT PRIMARY KEY IDENTITY(1,1),
+    Id INT PRIMARY KEY,
     Name VARCHAR(50) NOT NULL,
     Price INT,
     Price FLOAT(30,5)

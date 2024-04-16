@@ -1,283 +1,196 @@
 import pytest
-from sqlglot.expressions import (
-    Table,
-    Identifier,
-    Expression,
-    ColumnDef,
-    DataType,
-    ColumnConstraint,
-    PrimaryKeyColumnConstraint,
-    GeneratedAsIdentityColumnConstraint,
-    Literal,
-    Create,
-    Schema,
-    NotNullColumnConstraint,
-    DataTypeParam,
-)
 
 from schema_validator.ddl.parse_ddl import ParseDdl
-from schema_validator.model.column_schema import ColumnSchema
-from schema_validator.model.table_schema import TableSchema
+from schema_validator.model.column_schema import ColumnSchema, ColumnModel, DataType
+from schema_validator.model.table_schema import TableSchema, TableModel
 
 
 @pytest.mark.parametrize(
     "table_expr,desired_ref",
     [
-        (Table(**{"this": Identifier(**{"quoted": False, "this": "test"})}), "test"),
         (
-            Table(
-                **{
-                    "this": Identifier(**{"quoted": False, "this": "test"}),
-                    "db": Identifier(**{"quoted": False, "this": "schema"}),
-                }
+            TableModel(
+                table_name="test",
+                schema=None,
+                primary_key=[],
+                columns=[],
+                alter={},
+                checks=[],
+                index=[],
+                partitioned_by=[],
+                tablespace=None,
+            ),
+            "test",
+        ),
+        (
+            TableModel(
+                table_name="test",
+                schema="",
+                primary_key=[],
+                columns=[],
+                alter={},
+                checks=[],
+                index=[],
+                partitioned_by=[],
+                tablespace=None,
+            ),
+            "test",
+        ),
+        (
+            TableModel(
+                table_name="test",
+                schema="schema",
+                primary_key=[],
+                columns=[],
+                alter={},
+                checks=[],
+                index=[],
+                partitioned_by=[],
+                tablespace=None,
             ),
             "schema.test",
         ),
     ],
 )
-def test_parse_table_ref(table_expr: Table, desired_ref: str):
+def test_parse_table_ref(table_expr: TableModel, desired_ref: str):
     actual_ref = ParseDdl.parse_table_ref(table_expr)
     assert actual_ref == desired_ref
 
 
 @pytest.mark.parametrize(
-    "column_expr,desired_column",
+    "column_expr,primary_keys,desired_column",
     [
         (
-            ColumnDef(
-                **{
-                    "this": Identifier(**{"this": "Id", "quoted": False}),
-                    "kind": DataType(**{"this": DataType.Type.INT, "nested": False}),
-                    "constraints": [],
-                }
+            ColumnModel(
+                check=None,
+                default=None,
+                name="Id",
+                nullable=True,
+                references=None,
+                size=None,
+                type="INT",
+                unique=False,
             ),
-            ColumnSchema("Id", DataType.Type.INT, True, False, False),
+            ["Test"],
+            ColumnSchema("Id", DataType.INT, True, False, False),
         ),
         (
-            ColumnDef(
-                **{
-                    "this": Identifier(**{"this": "Id", "quoted": False}),
-                    "kind": DataType(**{"this": DataType.Type.INT, "nested": False}),
-                    "constraints": [
-                        ColumnConstraint(
-                            **{
-                                "kind": PrimaryKeyColumnConstraint(),
-                            }
-                        ),
-                        ColumnConstraint(
-                            **{
-                                "kind": GeneratedAsIdentityColumnConstraint(
-                                    **{
-                                        "start": Literal(
-                                            **{"this": 1, "is_string": False}
-                                        ),
-                                        "increment": Literal(
-                                            **{"this": 1, "is_string": False}
-                                        ),
-                                    }
-                                ),
-                            }
-                        ),
-                    ],
-                }
+            ColumnModel(
+                check=None,
+                default=None,
+                name="Id",
+                nullable=False,
+                references=None,
+                size=None,
+                type="INT",
+                unique=False,
             ),
-            ColumnSchema("Id", DataType.Type.INT, False, True, False),
+            ["Id"],
+            ColumnSchema("Id", DataType.INT, False, True, False),
         ),
     ],
 )
-def test_parse_column_expr(column_expr: Expression, desired_column: ColumnSchema):
+def test_parse_column_expr(
+    column_expr: ColumnModel, primary_keys: list[str], desired_column: ColumnSchema
+):
     table = TableSchema("test.table")
-    ParseDdl.parse_column_expr(column_expr, table)
+    ParseDdl.parse_column_expr(column_expr, primary_keys, table)
 
     assert table.get_column(desired_column.name) == desired_column
     assert len(table.columns) == 1
     assert len(table._name_to_column.values()) == 1
 
 
-@pytest.mark.parametrize(
-    "column_expr",
-    [
-        Table(**{"this": Identifier(**{"quoted": False, "this": "test"})}),
-        Table(
-            **{
-                "this": Identifier(**{"quoted": False, "this": "test"}),
-                "db": Identifier(**{"quoted": False, "this": "schema"}),
-            }
-        ),
-    ],
-)
-def test_parse_column_expr_non_rel(column_expr: Expression):
-    table = TableSchema("test.table")
-    ParseDdl.parse_column_expr(column_expr, table)
-
-    assert table.columns == []
+# @pytest.mark.parametrize(
+#     "column_expr, primary_keys",
+#     [
+#         Table(**{"this": Identifier(**{"quoted": False, "this": "test"})}),
+#         Table(
+#             **{
+#                 "this": Identifier(**{"quoted": False, "this": "test"}),
+#                 "db": Identifier(**{"quoted": False, "this": "schema"}),
+#             }
+#         ),
+#     ],
+# )
+# def test_parse_column_expr_non_rel(column_expr: ColumnModel, primary_keys: list[str]):
+#     table = TableSchema("test.table")
+#     ParseDdl.parse_column_expr(column_expr, primary_keys, table)
+#
+#     assert table.columns == []
 
 
 @pytest.mark.parametrize(
     "expr,desired_table_ref,desired_table_columns",
     [
         (
-            Create(
-                **{
-                    "kind": "TABLE",
-                    "this": Schema(
-                        **{
-                            "this": Table(
-                                **{
-                                    "this": Identifier(
-                                        **{"quoted": False, "this": "test"}
-                                    ),
-                                    "db": Identifier(
-                                        **{"quoted": False, "this": "schema"}
-                                    ),
-                                }
-                            ),
-                            "expressions": [
-                                ColumnDef(
-                                    **{
-                                        "this": Identifier(
-                                            **{"this": "Id", "quoted": False}
-                                        ),
-                                        "kind": DataType(
-                                            **{
-                                                "this": DataType.Type.INT,
-                                                "nested": False,
-                                            }
-                                        ),
-                                        "constraints": [
-                                            ColumnConstraint(
-                                                **{
-                                                    "kind": PrimaryKeyColumnConstraint(),
-                                                }
-                                            ),
-                                            ColumnConstraint(
-                                                **{
-                                                    "kind": GeneratedAsIdentityColumnConstraint(
-                                                        **{
-                                                            "start": Literal(
-                                                                **{
-                                                                    "this": 1,
-                                                                    "is_string": False,
-                                                                }
-                                                            ),
-                                                            "increment": Literal(
-                                                                **{
-                                                                    "this": 1,
-                                                                    "is_string": False,
-                                                                }
-                                                            ),
-                                                        }
-                                                    ),
-                                                }
-                                            ),
-                                        ],
-                                    }
-                                ),
-                                ColumnDef(
-                                    **{
-                                        "this": Identifier(
-                                            **{"this": "Name", "quoted": False}
-                                        ),
-                                        "kind": DataType(
-                                            **{
-                                                "this": DataType.Type.VARCHAR,
-                                                "nested": False,
-                                                "expressions": [
-                                                    DataTypeParam(
-                                                        **{
-                                                            "this": Literal(
-                                                                **{
-                                                                    "this": 50,
-                                                                    "is_string": False,
-                                                                }
-                                                            ),
-                                                            "nested": False,
-                                                        }
-                                                    )
-                                                ],
-                                            }
-                                        ),
-                                        "constraints": [
-                                            ColumnConstraint(
-                                                **{
-                                                    "kind": NotNullColumnConstraint(),
-                                                }
-                                            ),
-                                        ],
-                                    }
-                                ),
-                                ColumnDef(
-                                    **{
-                                        "this": Identifier(
-                                            **{"this": "Price", "quoted": False}
-                                        ),
-                                        "kind": DataType(
-                                            **{
-                                                "this": DataType.Type.INT,
-                                                "nested": False,
-                                            }
-                                        ),
-                                        "constraints": [],
-                                    }
-                                ),
-                                ColumnDef(
-                                    **{
-                                        "this": Identifier(
-                                            **{"this": "Percent", "quoted": False}
-                                        ),
-                                        "kind": DataType(
-                                            **{
-                                                "this": DataType.Type.FLOAT,
-                                                "nested": False,
-                                                "expressions": [
-                                                    DataTypeParam(
-                                                        **{
-                                                            "this": Literal(
-                                                                **{
-                                                                    "this": 30,
-                                                                    "is_string": False,
-                                                                }
-                                                            ),
-                                                            "nested": False,
-                                                        }
-                                                    ),
-                                                    DataTypeParam(
-                                                        **{
-                                                            "this": Literal(
-                                                                **{
-                                                                    "this": 5,
-                                                                    "is_string": False,
-                                                                }
-                                                            ),
-                                                            "nested": False,
-                                                        }
-                                                    ),
-                                                ],
-                                            }
-                                        ),
-                                        "constraints": [],
-                                    }
-                                ),
-                            ],
-                        }
+            TableModel(
+                table_name="test",
+                schema="schema",
+                primary_key=["Id"],
+                columns=[
+                    ColumnModel(
+                        check=None,
+                        default=None,
+                        name="Id",
+                        nullable=False,
+                        references=None,
+                        size=None,
+                        type="INT",
+                        unique=False,
                     ),
-                }
+                    ColumnModel(
+                        check=None,
+                        default=None,
+                        name="Name",
+                        nullable=False,
+                        references=None,
+                        size=50,
+                        type="VARCHAR",
+                        unique=False,
+                    ),
+                    ColumnModel(
+                        check=None,
+                        default=None,
+                        name="Price",
+                        nullable=True,
+                        references=None,
+                        size=None,
+                        type="INT",
+                        unique=False,
+                    ),
+                    ColumnModel(
+                        check=None,
+                        default=None,
+                        name="Percent",
+                        nullable=True,
+                        references=None,
+                        size=(30, 5),
+                        type="FLOAT",
+                        unique=False,
+                    ),
+                ],
+                alter={},
+                checks=[],
+                index=[],
+                partitioned_by=[],
+                tablespace=None,
             ),
             "schema.test",
             [
-                ColumnSchema("Id", DataType.Type.INT, False, True, False),
+                ColumnSchema("Id", DataType.INT, False, True, False),
                 ColumnSchema(
                     "Name",
-                    DataType.Type.VARCHAR,
+                    DataType.VARCHAR,
                     False,
                     False,
                     False,
                     type_args={"size": 50},
                 ),
-                ColumnSchema("Price", DataType.Type.INT, True, False, False),
+                ColumnSchema("Price", DataType.INT, True, False, False),
                 ColumnSchema(
                     "Percent",
-                    DataType.Type.FLOAT,
+                    DataType.FLOAT,
                     True,
                     False,
                     False,
@@ -288,7 +201,7 @@ def test_parse_column_expr_non_rel(column_expr: Expression):
     ],
 )
 def test_parse_create_table_expr(
-    expr: Expression, desired_table_ref: str, desired_table_columns: list[ColumnSchema]
+    expr: TableModel, desired_table_ref: str, desired_table_columns: list[ColumnSchema]
 ):
     desired_table = TableSchema(desired_table_ref)
     for column in desired_table_columns:

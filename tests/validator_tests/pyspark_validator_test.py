@@ -2,17 +2,26 @@ import os
 import sys
 
 import pytest
-from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, VarcharType, FloatType, \
-    DataTypeSingleton, DecimalType
-from sqlglot.expressions import DataType
+from pyspark.sql import SparkSession
+from pyspark.sql.types import (
+    StructType,
+    StructField,
+    StringType,
+    IntegerType,
+    VarcharType,
+    FloatType,
+    DecimalType,
+)
 
-from schema_validator.model.column_schema import ColumnSchema
+from schema_validator.model.column_schema import ColumnSchema, DataType
 from schema_validator.model.table_schema import TableSchema
-from schema_validator.validator.pyspark_validator import PysparkValidator, PysparkValidatorFactory
+from schema_validator.validator.pyspark_validator import (
+    PysparkValidator,
+    PysparkValidatorFactory,
+)
 
-os.environ['PYSPARK_PYTHON'] = sys.executable
-os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
+os.environ["PYSPARK_PYTHON"] = sys.executable
+os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
 
 @pytest.fixture(scope="session")
@@ -150,10 +159,10 @@ def test_pyspark_validator(
 @pytest.mark.parametrize(
     "type_, pyspark_type, size",
     [
-        (DataType.Type.TEXT, StringType(), None),
-        (DataType.Type.VARCHAR, VarcharType(10), 10),
-        (DataType.Type.INT, IntegerType(), None),
-        (DataType.Type.FLOAT, FloatType(), None),
+        (DataType.TEXT, StringType(), None),
+        (DataType.VARCHAR, VarcharType(10), 10),
+        (DataType.INT, IntegerType(), None),
+        (DataType.FLOAT, FloatType(), None),
     ],
 )
 def test_pyspark_validator_factory_convert_type(type_, pyspark_type, size):
@@ -165,49 +174,51 @@ def test_pyspark_validator_factory_convert_type(type_, pyspark_type, size):
     "column_schema, struct_field",
     [
         (
-            ColumnSchema("Id", DataType.Type.INT, False, True, False),
-            StructField("Id", IntegerType(), False)
+            ColumnSchema("Id", DataType.INT, False, True, False),
+            StructField("Id", IntegerType(), False),
         ),
         (
             ColumnSchema(
                 "Name",
-                DataType.Type.VARCHAR,
+                DataType.VARCHAR,
                 False,
                 False,
                 False,
                 type_args={"size": 50},
             ),
-            StructField("Name", VarcharType(50), False)
+            StructField("Name", VarcharType(50), False),
         ),
         (
             ColumnSchema(
                 "Example",
-                DataType.Type.DECIMAL,
+                DataType.DECIMAL,
                 False,
                 False,
                 False,
                 type_args={"size": (50, 3)},
             ),
-            StructField("Example", DecimalType(50, 3), False)
+            StructField("Example", DecimalType(50, 3), False),
         ),
         (
-            ColumnSchema("Price", DataType.Type.INT, True, False, False),
-            StructField("Price", IntegerType(), True)
+            ColumnSchema("Price", DataType.INT, True, False, False),
+            StructField("Price", IntegerType(), True),
         ),
         (
             ColumnSchema(
                 "Percent",
-                DataType.Type.FLOAT,
+                DataType.FLOAT,
                 True,
                 False,
                 False,
                 # type_args={"size": (30, 5)},
             ),
-            StructField("Percent", FloatType(), True)
-        )
-    ]
+            StructField("Percent", FloatType(), True),
+        ),
+    ],
 )
-def test_pyspark_validator_factory_convert_column_to_pyspark(column_schema: ColumnSchema, struct_field: StructField):
+def test_pyspark_validator_factory_convert_column_to_pyspark(
+    column_schema: ColumnSchema, struct_field: StructField
+):
     converted_column = PysparkValidatorFactory._convert_column_to_pyspark(column_schema)
     assert converted_column == struct_field
 
@@ -216,36 +227,40 @@ def test_pyspark_validator_factory_convert_column_to_pyspark(column_schema: Colu
     "schema, column_schemas",
     [
         (
-            StructType([
-                StructField("Id", IntegerType(), False),
-                StructField("Name", VarcharType(50), False),
-                StructField("Price", IntegerType(), True),
-                StructField("Percent", FloatType(), True)
-            ]),
+            StructType(
+                [
+                    StructField("Id", IntegerType(), False),
+                    StructField("Name", VarcharType(50), False),
+                    StructField("Price", IntegerType(), True),
+                    StructField("Percent", FloatType(), True),
+                ]
+            ),
             [
-                ColumnSchema("Id", DataType.Type.INT, False, True, False),
+                ColumnSchema("Id", DataType.INT, False, True, False),
                 ColumnSchema(
                     "Name",
-                    DataType.Type.VARCHAR,
+                    DataType.VARCHAR,
                     False,
                     False,
                     False,
                     type_args={"size": 50},
                 ),
-                ColumnSchema("Price", DataType.Type.INT, True, False, False),
+                ColumnSchema("Price", DataType.INT, True, False, False),
                 ColumnSchema(
                     "Percent",
-                    DataType.Type.FLOAT,
+                    DataType.FLOAT,
                     True,
                     False,
                     False,
                     # type_args={"size": (30, 5)},
                 ),
-            ]
+            ],
         )
-    ]
+    ],
 )
-def test_pyspark_validator_factory_get_validator(schema: StructType, column_schemas: list[ColumnSchema]):
+def test_pyspark_validator_factory_get_validator(
+    schema: StructType, column_schemas: list[ColumnSchema]
+):
     table_schema = TableSchema("example")
     for column_schema in column_schemas:
         table_schema.add_column(column_schema)
