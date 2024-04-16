@@ -1,18 +1,6 @@
 import json
 
-import sqlglot
 from simple_ddl_parser import DDLParser
-from sqlglot.expressions import (
-    Table,
-    ColumnDef,
-    PrimaryKey,
-    NotNullColumnConstraint,
-    PrimaryKeyColumnConstraint,
-    Expression,
-    Create,
-    Identifier,
-    DataType,
-)
 
 from schema_validator.model.column_schema import ColumnSchema, ColumnModel
 from schema_validator.model.table_schema import TableSchema, TableModel
@@ -24,19 +12,6 @@ class ParseDdl:
         with open(path, "r") as f:
             sql = f.read()
         return sql
-
-    @staticmethod
-    def parse_data_type_args(
-        type_: DataType | None,
-    ) -> dict[str, int | tuple[int, int]]:
-        args = {}
-        if type_ is None:
-            return args
-
-        string_expression = f"create table example(example {type_.__str__()})"
-        parsed_expression = DDLParser(string_expression).run()[0]["columns"][0]
-        args["size"] = parsed_expression["size"]
-        return args
 
     @staticmethod
     def parse_column_expr(
@@ -85,7 +60,3 @@ class ParseDdl:
             ParseDdl.parse_expr(table_model, tables)
 
         return tables
-
-    @staticmethod
-    def is_create_table_expr(expr: Expression | None) -> bool:
-        return isinstance(expr, Create)
