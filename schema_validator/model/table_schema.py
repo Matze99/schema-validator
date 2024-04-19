@@ -1,6 +1,20 @@
 from dataclasses import dataclass, field
 
-from schema_validator.model.column_schema import ColumnSchema
+from pydantic import BaseModel
+
+from schema_validator.model.column_schema import ColumnSchema, ColumnModel
+
+
+class TableModel(BaseModel):
+    table_name: str
+    schema: str | None # type: ignore
+    primary_key: list[str]
+    columns: list[ColumnModel]
+    alter: dict
+    checks: list
+    index: list
+    partitioned_by: list
+    tablespace: str | None
 
 
 @dataclass

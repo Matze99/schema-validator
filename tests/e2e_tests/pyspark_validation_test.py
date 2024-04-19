@@ -8,8 +8,8 @@ from schema_validator.ddl.schema_store import SchemaStore
 from schema_validator.validator.pyspark_validator import PysparkValidatorFactory
 
 
-os.environ['PYSPARK_PYTHON'] = sys.executable
-os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
+os.environ["PYSPARK_PYTHON"] = sys.executable
+os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
 prefix = "."
 
