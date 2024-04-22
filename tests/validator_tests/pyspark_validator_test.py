@@ -8,7 +8,6 @@ from pyspark.sql.types import (
     StructField,
     StringType,
     IntegerType,
-    VarcharType,
     FloatType,
     DecimalType,
 )
@@ -116,7 +115,7 @@ def spark_session() -> SparkSession:
         (
             StructType(
                 [
-                    StructField("firstname", VarcharType(1), True),
+                    StructField("firstname", StringType(), True),
                     StructField("middlename", StringType(), True),
                     StructField("lastname", StringType(), True),
                     StructField("id", StringType(), True),
@@ -150,7 +149,7 @@ def test_pyspark_validator(
     table = spark_session.createDataFrame(data=values, schema=actual_schema)
     results = table.cache().collect()
 
-    validator = PysparkValidator(desired_schema)
+    validator = PysparkValidator(desired_schema, spark_session)
 
     result, _ = validator.validate(table)
     assert result == is_equal
@@ -160,7 +159,7 @@ def test_pyspark_validator(
     "type_, pyspark_type, size",
     [
         (DataType.TEXT, StringType(), None),
-        (DataType.VARCHAR, VarcharType(10), 10),
+        (DataType.VARCHAR, StringType(), 10),
         (DataType.INT, IntegerType(), None),
         (DataType.FLOAT, FloatType(), None),
     ],
@@ -186,7 +185,7 @@ def test_pyspark_validator_factory_convert_type(type_, pyspark_type, size):
                 False,
                 type_args={"size": 50},
             ),
-            StructField("Name", VarcharType(50), False),
+            StructField("Name", StringType(), False),
         ),
         (
             ColumnSchema(
@@ -230,7 +229,7 @@ def test_pyspark_validator_factory_convert_column_to_pyspark(
             StructType(
                 [
                     StructField("Id", IntegerType(), False),
-                    StructField("Name", VarcharType(50), False),
+                    StructField("Name", StringType(), False),
                     StructField("Price", IntegerType(), True),
                     StructField("Percent", FloatType(), True),
                 ]
@@ -259,11 +258,11 @@ def test_pyspark_validator_factory_convert_column_to_pyspark(
     ],
 )
 def test_pyspark_validator_factory_get_validator(
-    schema: StructType, column_schemas: list[ColumnSchema]
+    spark_session: SparkSession, schema: StructType, column_schemas: list[ColumnSchema]
 ):
     table_schema = TableSchema("example")
     for column_schema in column_schemas:
         table_schema.add_column(column_schema)
 
-    validator = PysparkValidatorFactory.get_validator(table_schema)
+    validator = PysparkValidatorFactory.get_validator(table_schema, spark_session)
     assert validator.schema == schema

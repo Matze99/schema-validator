@@ -31,7 +31,7 @@ schema_store = SchemaStore("path/to/ddl/files")
 df = spark_session.read.csv("path/to/csv", header=True, inferSchema=True)
 
 table_schema = schema_store.get_table_schema("schema.table")
-validator = PysparkValidatorFactory.get_validator(table_schema)
+validator = PysparkValidatorFactory.get_validator(table_schema, spark_session)
 
 is_valid, message = validator.validate(df)
 

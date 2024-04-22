@@ -1,7 +1,5 @@
 from pyspark.sql.types import DataType as SparkDataType
 from pyspark.sql.types import (
-    CharType,
-    VarcharType,
     BinaryType,
     BooleanType,
     DateType,
@@ -22,8 +20,8 @@ from schema_validator.model.column_schema import DataType
 
 PYSPARK_TYPE_MAPPING: dict[DataType, SparkDataType] = dict(
     [  # type: ignore
-        (DataType.CHAR, CharType),
-        (DataType.VARCHAR, VarcharType),
+        (DataType.CHAR, StringType),
+        (DataType.VARCHAR, StringType),
         (DataType.BINARY, BinaryType),
         (DataType.VARBINARY, BinaryType),
         (DataType.TEXT, StringType),
@@ -39,7 +37,7 @@ PYSPARK_TYPE_MAPPING: dict[DataType, SparkDataType] = dict(
         (DataType.FLOAT, FloatType),
         (DataType.DOUBLE, DoubleType),
         (DataType.DECIMAL, DecimalType),
-        (DataType.NVARCHAR, VarcharType),
+        (DataType.NVARCHAR, StringType),
         (DataType.ARRAY, ArrayType),
         (DataType.MAP, MapType),
         (DataType.STRUCT, StructType),
