@@ -40,7 +40,7 @@ print(f"schema check successful {is_valid} with message {message}")
 
 ## Limitations
 
-* alter is not supported yet
+* alter is only supported for defining primary and foreign keys
 * only sql ddl files are supported
 * only pyspark can be currently validated
 

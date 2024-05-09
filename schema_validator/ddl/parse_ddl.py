@@ -2,7 +2,13 @@ import json
 
 from simple_ddl_parser import DDLParser
 
-from schema_validator.model.column_schema import ColumnSchema, ColumnModel
+from schema_validator.model.column_schema import (
+    ColumnSchema,
+    ColumnModel,
+    ColumnReferenceModel,
+    AlterColumnModel,
+)
+from schema_validator.model.empty_model import EmptyModel
 from schema_validator.model.table_schema import TableSchema, TableModel
 
 
@@ -37,7 +43,13 @@ class ParseDdl:
         table_ref = ParseDdl.parse_table_ref(table_model)
         table = TableSchema(table_ref)
 
+        if isinstance(table_model, EmptyModel):
+            return table
+
         for column_expr in table_model.columns:
+            # for pyright to be happy
+            if isinstance(column_expr, tuple):
+                continue
             ParseDdl.parse_column_expr(column_expr, table_model.primary_key, table)
 
         return table
@@ -47,8 +59,6 @@ class ParseDdl:
         new_table = ParseDdl.parse_create_table_expr(table_model)
         tables[new_table.table_ref] = new_table
 
-        # TODO this does not handle alter
-
     @staticmethod
     def parse_sql(sql: str, dialect: str = "sql") -> dict[str, TableSchema]:
 
@@ -57,6 +67,7 @@ class ParseDdl:
         tables = {}
         for expr in parsed_ddl:
             table_model = TableModel(**expr)
+            table_model.apply_alter()
             ParseDdl.parse_expr(table_model, tables)
 
         return tables

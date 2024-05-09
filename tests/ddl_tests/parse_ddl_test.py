@@ -1,7 +1,15 @@
 import pytest
 
 from schema_validator.ddl.parse_ddl import ParseDdl
-from schema_validator.model.column_schema import ColumnSchema, ColumnModel, DataType
+from schema_validator.model.alter_table_model import AlterTableModel, PrimaryKeyModel
+from schema_validator.model.column_schema import (
+    ColumnSchema,
+    ColumnModel,
+    DataType,
+    ColumnReferenceModel,
+    ForeignKeyReference,
+    AlterColumnModel,
+)
 from schema_validator.model.table_schema import TableSchema, TableModel
 
 
@@ -72,6 +80,92 @@ def test_parse_table_ref(table_expr: TableModel, desired_ref: str):
                 unique=False,
             ),
             ["Test"],
+            ColumnSchema("Id", DataType.INT, True, True, False),
+        ),
+        (
+            ColumnModel(
+                check=None,
+                default=None,
+                name="Id",
+                nullable=False,
+                references=None,
+                size=None,
+                type="INT",
+                unique=False,
+            ),
+            ["Id"],
+            ColumnSchema("Id", DataType.FLOAT, False, True, False),
+        ),
+        (
+            ColumnModel(
+                check=None,
+                default=None,
+                name="Id",
+                nullable=False,
+                references=None,
+                size=None,
+                type="int",
+                unique=False,
+            ),
+            [],
+            ColumnSchema("Id", DataType.INT, False, True, False),
+        ),
+        (
+            ColumnModel(
+                check=None,
+                default=None,
+                name="Id",
+                nullable=False,
+                references=ColumnReferenceModel(
+                    table="foreign_table",
+                    schema="foreign_schema",
+                    on_delete=None,
+                    on_update=None,
+                    deferrable_initially=None,
+                    column="foreign_column",
+                ),
+                size=None,
+                type="int",
+                unique=False,
+            ),
+            ["Id"],
+            ColumnSchema(
+                "Id",
+                DataType.INT,
+                False,
+                True,
+                False,
+                foreign_key_reference=ForeignKeyReference(
+                    "foreign_table", "foreign_schem_a", "foreign_column"
+                ),
+            ),
+        ),
+    ],
+)
+def test_parse_column_expr_unequal(
+    column_expr: ColumnModel, primary_keys: list[str], desired_column: ColumnSchema
+):
+    table = TableSchema("test.table")
+    ParseDdl.parse_column_expr(column_expr, primary_keys, table)
+
+    assert table.get_column(desired_column.name) != desired_column
+
+
+@pytest.mark.parametrize(
+    "column_expr,primary_keys,desired_column",
+    [
+        (
+            ColumnModel(
+                check=None,
+                default=None,
+                name="Id",
+                nullable=True,
+                references=None,
+                size=None,
+                type="INT",
+                unique=False,
+            ),
+            ["Test"],
             ColumnSchema("Id", DataType.INT, True, False, False),
         ),
         (
@@ -87,6 +181,50 @@ def test_parse_table_ref(table_expr: TableModel, desired_ref: str):
             ),
             ["Id"],
             ColumnSchema("Id", DataType.INT, False, True, False),
+        ),
+        (
+            ColumnModel(
+                check=None,
+                default=None,
+                name="Id",
+                nullable=False,
+                references=None,
+                size=None,
+                type="int",
+                unique=False,
+            ),
+            ["Id"],
+            ColumnSchema("Id", DataType.INT, False, True, False),
+        ),
+        (
+            ColumnModel(
+                check=None,
+                default=None,
+                name="Id",
+                nullable=False,
+                references=ColumnReferenceModel(
+                    table="foreign_table",
+                    schema="foreign_schema",
+                    on_delete=None,
+                    on_update=None,
+                    deferrable_initially=None,
+                    column="foreign_column",
+                ),
+                size=None,
+                type="int",
+                unique=False,
+            ),
+            ["Id"],
+            ColumnSchema(
+                "Id",
+                DataType.INT,
+                False,
+                True,
+                False,
+                foreign_key_reference=ForeignKeyReference(
+                    "foreign_table", "foreign_schema", "foreign_column"
+                ),
+            ),
         ),
     ],
 )
@@ -198,6 +336,104 @@ def test_parse_column_expr(
                 ),
             ],
         ),
+        (
+            TableModel(
+                table_name="test",
+                schema="schema",
+                primary_key=[],
+                columns=[
+                    ColumnModel(
+                        check=None,
+                        default=None,
+                        name="Id",
+                        nullable=False,
+                        references=None,
+                        size=None,
+                        type="INT",
+                        unique=False,
+                    ),
+                ],
+                alter=AlterTableModel(
+                    primary_keys=[
+                        PrimaryKeyModel(columns=["Id"], constraint_name="test")
+                    ]
+                ),
+                checks=[],
+                index=[],
+                partitioned_by=[],
+                tablespace=None,
+            ),
+            "schema.test",
+            [
+                ColumnSchema("Id", DataType.INT, False, True, False),
+            ],
+        ),
+        (
+            TableModel(
+                table_name="test",
+                schema="schema",
+                primary_key=[],
+                columns=[
+                    ColumnModel(
+                        check=None,
+                        default=None,
+                        name="Id",
+                        nullable=False,
+                        references=None,
+                        size=None,
+                        type="INT",
+                        unique=False,
+                    ),
+                    ColumnModel(
+                        check=None,
+                        default=None,
+                        name="Percent",
+                        nullable=True,
+                        references=None,
+                        size=(30, 5),
+                        type="FLOAT",
+                        unique=False,
+                    ),
+                ],
+                alter=AlterTableModel(
+                    primary_keys=[
+                        PrimaryKeyModel(columns=["Id"], constraint_name="test")
+                    ],
+                    columns=[
+                        AlterColumnModel(
+                            name="Percent",
+                            references=ColumnReferenceModel(
+                                table="foreign_table",
+                                schema="foreign_schema",
+                                on_delete=None,
+                                on_update=None,
+                                deferrable_initially=None,
+                                column="foreign",
+                            ),
+                        )
+                    ],
+                ),
+                checks=[],
+                index=[],
+                partitioned_by=[],
+                tablespace=None,
+            ),
+            "schema.test",
+            [
+                ColumnSchema("Id", DataType.INT, False, True, False),
+                ColumnSchema(
+                    "Percent",
+                    DataType.FLOAT,
+                    True,
+                    False,
+                    False,
+                    type_args={"size": (30, 5)},
+                    foreign_key_reference=ForeignKeyReference(
+                        "foreign_table", "foreign_schema", "foreign"
+                    ),
+                ),
+            ],
+        ),
     ],
 )
 def test_parse_create_table_expr(
@@ -207,6 +443,7 @@ def test_parse_create_table_expr(
     for column in desired_table_columns:
         desired_table.add_column(column)
 
+    expr.apply_alter()
     table = ParseDdl.parse_create_table_expr(expr)
 
     assert table == desired_table

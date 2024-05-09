@@ -4,6 +4,14 @@ from schema_validator.ddl.parse_ddl import ParseDdl
 from schema_validator.model.table_schema import TableSchema
 
 
+class DuplicateTableDefinitionException(Exception):
+    pass
+
+
+class TableNotFoundException(Exception):
+    pass
+
+
 class SchemaStore:
     def __init__(self, path: str):
         """
@@ -15,7 +23,7 @@ class SchemaStore:
         self.path = path
         self.tables = {}
 
-        if path[-3:] == "sql":
+        if path.endswith("sql"):
             all_files = [path]
         else:
             # load files from path and parse
@@ -30,18 +38,19 @@ class SchemaStore:
 
             for new_table in new_tables.keys():
                 if new_table in self.tables.keys():
-                    raise Exception(f"Table {new_table} already exists")
-            # TODO handle table alter in different file
+                    raise DuplicateTableDefinitionException(
+                        f"Table {new_table} already exists"
+                    )
 
             self.tables.update(new_tables)
 
     def get_table_schema(self, name: str) -> TableSchema:
-        if not name in self.tables.keys():
-            raise Exception(f"table {name} not found")
+        if name not in self.tables.keys():
+            raise TableNotFoundException(f"table {name} not found")
 
         return self.tables[name]
 
 
 if __name__ == "__main__":
-    schema_store = SchemaStore("../../data/test-ddls/simple-ddls")
+    schema_store = SchemaStore("../../data/test-ddls/medium-ddls")
     print(schema_store.get_table_schema("Books"))

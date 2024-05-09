@@ -21,13 +21,20 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
 
-      - name: Run unit tests
+      - name: Setup
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
           poetry env use python3.10
           poetry install
-          poetry run pytest --cov=schema_validator tests/
+
+      - name: check formatting
+        run: |
+          black --check **/*.py
 
       - name: Run static type analysis
         run: |
           poetry run pyright
+
+      - name: run unittests
+        run: |
+          poetry run pytest --cov=schema_validator tests/
